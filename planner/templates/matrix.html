@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+.matrix-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.matrix-header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -1px;
+}
+.matrix-header p {
+  color: var(--ink-light);
+  font-size: 14px;
+}
+
+.matrix-wrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  min-height: 560px;
+}
+
+/* Axis labels */
+.axis-label {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.axis-top { top: -28px; left: 50%; transform: translateX(-50%); }
+.axis-bottom { bottom: -28px; left: 50%; transform: translateX(-50%); }
+.axis-left { left: -72px; top: 50%; transform: translateY(-50%) rotate(-90deg); white-space:nowrap; }
+.axis-right { right: -72px; top: 50%; transform: translateY(-50%) rotate(90deg); white-space:nowrap; }
+
+.quadrant {
+  padding: 28px 24px;
+  border: 0.75px solid var(--ink-faint);
+  position: relative;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+.quadrant:nth-child(1) { border-top:none; border-left:none; }
+.quadrant:nth-child(2) { border-top:none; border-right:none; }
+.quadrant:nth-child(3) { border-bottom:none; border-left:none; }
+.quadrant:nth-child(4) { border-bottom:none; border-right:none; }
+
+.q-label {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--ink-faint);
+  font-style: italic;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+.q-sublabel {
+  font-size: 11px;
+  color: #ccc;
+  margin-bottom: 20px;
+  letter-spacing: 0.02em;
+}
+
+/* Q colors */
+.q-start-here .q-label { color: #b8cce0; }
+.q-start-here .q-sublabel { color: #d4e4f0; }
+.q-on-hold .q-label { color: #d0c4bc; }
+.q-on-hold .q-sublabel { color: #e0d6d0; }
+.q-power-hour .q-label { color: #c4b8b0; }
+.q-reassign .q-label { color: #b0c8b0; }
+.q-reassign .q-sublabel { color: #c8d8c8; }
+
+.q-tasks { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+
+.q-task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: background 0.15s;
+  cursor: default;
+}
+.q-task:hover { background: var(--paper-warm); }
+
+.q-check {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--ink-faint);
+  border-radius: 3px;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.q-check:hover { border-color: var(--accent); }
+.q-check.checked { background: var(--ink); border-color: var(--ink); }
+.q-check.checked::after {
+  content: '';
+  width: 4px;
+  height: 7px;
+  border-right: 1.5px solid white;
+  border-bottom: 1.5px solid white;
+  transform: rotate(45deg) translate(-1px,-1px);
+  display: block;
+}
+
+.q-task-title {
+  font-size: 13px;
+  flex: 1;
+  line-height: 1.4;
+}
+.q-task-title.done { color: var(--ink-faint); text-decoration: line-through; }
+
+.q-task-del {
+  opacity: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-light);
+  font-size: 15px;
+  padding: 0 3px;
+  transition: all 0.15s;
+}
+.q-task:hover .q-task-del { opacity: 1; }
+.q-task-del:hover { color: var(--red); }
+
+.q-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1.5px dashed var(--ink-faint);
+  margin-top: 8px;
+  transition: border-color 0.2s;
+}
+.q-add:focus-within { border-style: solid; border-color: var(--accent); }
+.q-add .plus { color: var(--ink-faint); font-size: 15px; flex-shrink:0; }
+
+.matrix-container {
+  padding: 36px 80px 40px;
+}
+</style>
+
+<div class="matrix-header">
+  <h1>Priority Matrix</h1>
+  <p id="matrixDate"></p>
+</div>
+
+<div class="matrix-container">
+  <div class="matrix-wrap" id="matrix">
+    <span class="axis-label axis-top">Quick Wins</span>
+    <span class="axis-label axis-bottom">Big Complex Tasks</span>
+    <span class="axis-label axis-left">Due Today</span>
+    <span class="axis-label axis-right">Due Later</span>
+
+    <!-- Q1: Due Today + Quick = START HERE -->
+    <div class="quadrant q-start-here">
+      <div class="q-label">start here</div>
+      <div class="q-sublabel"></div>
+      <div class="q-tasks" id="q-today-quick"></div>
+      <div class="q-add">
+        <span class="plus">+</span>
+        <input type="text" placeholder="Add task…" onkeydown="addQTask(event,'today','quick')">
+      </div>
+    </div>
+
+    <!-- Q2: Due Later + Quick = ON HOLD -->
+    <div class="quadrant q-on-hold">
+      <div class="q-label">on hold</div>
+      <div class="q-sublabel">don't get distracted</div>
+      <div class="q-tasks" id="q-later-quick"></div>
+      <div class="q-add">
+        <span class="plus">+</span>
+        <input type="text" placeholder="Add task…" onkeydown="addQTask(event,'later','quick')">
+      </div>
+    </div>
+
+    <!-- Q3: Due Today + Complex = POWER HOUR -->
+    <div class="quadrant q-power-hour">
+      <div class="q-label">power hour</div>
+      <div class="q-sublabel"></div>
+      <div class="q-tasks" id="q-today-complex"></div>
+      <div class="q-add">
+        <span class="plus">+</span>
+        <input type="text" placeholder="Add task…" onkeydown="addQTask(event,'today','complex')">
+      </div>
+    </div>
+
+    <!-- Q4: Due Later + Complex = BREAK INTO SMALLER TASKS -->
+    <div class="quadrant q-reassign">
+      <div class="q-label">break into<br>smaller tasks<br>& reassign</div>
+      <div class="q-sublabel"></div>
+      <div class="q-tasks" id="q-later-complex"></div>
+      <div class="q-add">
+        <span class="plus">+</span>
+        <input type="text" placeholder="Add task…" onkeydown="addQTask(event,'later','complex')">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('matrixDate').textContent =
+  new Date(CURRENT_DATE + 'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+function qTaskHTML(t) {
+  return `<div class="q-task" id="qtask-${t.id}">
+    <div class="q-check ${t.completed?'checked':''}" onclick="toggleQTask(${t.id},${t.completed?0:1})"></div>
+    <span class="q-task-title ${t.completed?'done':''}">${escHtml(t.title)}</span>
+    <button class="q-task-del" onclick="deleteQTask(${t.id})">×</button>
+  </div>`;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function qId(urgency, complexity) {
+  return `q-${urgency}-${complexity}`;
+}
+
+async function loadMatrix() {
+  const tasks = await api('GET', `/api/tasks?date=${CURRENT_DATE}`);
+  ['today-quick','today-complex','later-quick','later-complex'].forEach(k => {
+    document.getElementById('q-'+k).innerHTML = '';
+  });
+  tasks.forEach(t => {
+    const id = qId(t.urgency, t.complexity);
+    const el = document.getElementById(id);
+    if(el) el.insertAdjacentHTML('beforeend', qTaskHTML(t));
+  });
+}
+
+async function addQTask(e, urgency, complexity) {
+  if(e.key !== 'Enter') return;
+  const inp = e.target;
+  const title = inp.value.trim();
+  if(!title) return;
+  const t = await api('POST','/api/tasks',{
+    title, task_date: CURRENT_DATE,
+    category: complexity === 'complex' ? 'power_hour' : 'todo',
+    urgency, complexity
+  });
+  const el = document.getElementById(qId(urgency, complexity));
+  el.insertAdjacentHTML('beforeend', qTaskHTML(t));
+  inp.value = '';
+}
+
+async function toggleQTask(id, val) {
+  const t = await api('PUT', `/api/tasks/${id}`, {completed: val});
+  document.getElementById(`qtask-${id}`).outerHTML = qTaskHTML(t);
+}
+
+async function deleteQTask(id) {
+  await api('DELETE', `/api/tasks/${id}`);
+  document.getElementById(`qtask-${id}`).remove();
+}
+
+loadMatrix();
+</script>
+{% endblock %}

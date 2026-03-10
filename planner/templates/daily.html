@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+.day-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.day-header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 36px;
+  font-weight: 400;
+  letter-spacing: -1px;
+}
+.day-header .dow { color: var(--ink-light); font-size: 16px; }
+
+/* Day-of-week circles */
+.week-days {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 40px;
+}
+.week-day {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-light);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.week-day:hover { border-color: var(--ink); color: var(--ink); }
+.week-day.active { background: var(--ink); border-color: var(--ink); color: #faf9f7; }
+
+.planner-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 14px;
+}
+
+.task-list { display: flex; flex-direction: column; gap: 2px; }
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.task-item:hover { background: var(--paper-warm); }
+
+.task-check {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--ink-faint);
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.task-check:hover { border-color: var(--accent); }
+.task-check.checked { background: var(--ink); border-color: var(--ink); }
+.task-check.checked::after {
+  content: '';
+  width: 5px; height: 9px;
+  border-right: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(45deg) translate(-1px,-1px);
+  display: block;
+}
+.task-title { flex: 1; font-size: 14px; }
+.task-title.done { color: var(--ink-faint); text-decoration: line-through; }
+.task-delete {
+  opacity: 0; background: none; border: none;
+  cursor: pointer; color: var(--ink-light);
+  font-size: 17px; padding: 0 4px; border-radius: 4px;
+  transition: all 0.15s;
+}
+.task-item:hover .task-delete { opacity: 1; }
+.task-delete:hover { color: #c94040; }
+
+.add-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 8px;
+  border: 1.5px dashed var(--ink-faint);
+  margin-top: 6px; transition: border-color 0.2s;
+}
+.add-row:focus-within { border-color: var(--accent); border-style: solid; }
+.add-row .plus { color: var(--ink-faint); font-size: 17px; flex-shrink:0; }
+
+/* Power Hour block */
+.power-block {
+  background: #ede8e3;
+  border-radius: 12px;
+  padding: 18px 18px 18px 36px;
+  margin-top: 24px;
+  position: relative;
+}
+.power-label {
+  position: absolute;
+  left: 10px; top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: center;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  white-space: nowrap;
+}
+
+.meetings-box, .notes-box {
+  border: 1.5px solid var(--ink-faint);
+  border-radius: 12px;
+  padding: 18px;
+}
+.meetings-box { min-height: 130px; }
+.notes-box { min-height: 200px; display:flex; flex-direction:column; }
+.notes-box textarea {
+  flex:1; min-height:180px;
+  font-size:14px; line-height:1.75;
+}
+
+.meeting-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--ink-faint);
+  font-size: 14px;
+}
+.meeting-item:last-child { border-bottom: none; }
+.meeting-delete {
+  opacity:0; background:none; border:none;
+  cursor:pointer; color:var(--ink-light); font-size:15px;
+  transition: all 0.15s;
+}
+.meeting-item:hover .meeting-delete { opacity:1; color:#c94040; }
+</style>
+
+<div class="day-header">
+  <h1 id="dateDisplay"></h1>
+  <span class="dow" id="dowDisplay"></span>
+</div>
+
+<div class="week-days" id="weekDays"></div>
+
+<div class="planner-grid">
+  <div>
+    <div class="section-title">Today's Schedule</div>
+    <div class="section-title" style="font-size:10px;margin-bottom:8px;margin-top:-6px;">To Do</div>
+    <div class="task-list" id="todoList"></div>
+    <div class="add-row">
+      <span class="plus">+</span>
+      <input type="text" placeholder="Add a task…" onkeydown="addTask(event,'todo')">
+    </div>
+
+    <div class="power-block">
+      <span class="power-label">Power Hour</span>
+      <div class="task-list" id="powerList"></div>
+      <div class="add-row" style="border-color:#c8bdb6;">
+        <span class="plus" style="color:#c8bdb6;">+</span>
+        <input type="text" placeholder="Add a power hour task…" onkeydown="addTask(event,'power_hour')">
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-title">Meetings</div>
+    <div class="meetings-box">
+      <div id="meetingList"></div>
+      <div class="add-row" style="margin-top:8px;border-color:#ddd8d2;">
+        <span class="plus">+</span>
+        <input type="text" placeholder="Add meeting…" onkeydown="addMeeting(event)">
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:28px;">Notes / Don't Forget</div>
+    <div class="notes-box">
+      <textarea id="notesArea" placeholder="Your notes…" oninput="scheduleNoteSave()"></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+let notesTimer;
+const DAYS = ['S','M','T','W','T','F','S'];
+
+function formatDate(d) {
+  return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+function getDow(d) {
+  return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});
+}
+
+function buildWeekDays() {
+  const dt = new Date(CURRENT_DATE+'T12:00:00');
+  const start = new Date(dt);
+  start.setDate(dt.getDate() - dt.getDay()); // Sunday
+  const el = document.getElementById('weekDays');
+  el.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(start);
+    d.setDate(start.getDate()+i);
+    const iso = d.toISOString().slice(0,10);
+    const a = document.createElement('a');
+    a.className = 'week-day'+(iso===CURRENT_DATE?' active':'');
+    a.textContent = DAYS[i];
+    a.href = '?date='+iso;
+    el.appendChild(a);
+  }
+}
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function taskHTML(t){
+  return `<div class="task-item" id="task-${t.id}">
+    <div class="task-check ${t.completed?'checked':''}" onclick="toggleTask(${t.id},${t.completed?0:1})"></div>
+    <span class="task-title ${t.completed?'done':''}">${esc(t.title)}</span>
+    <button class="task-delete" onclick="deleteTask(${t.id})">×</button>
+  </div>`;
+}
+
+function meetingHTML(m){
+  return `<div class="meeting-item" id="meeting-${m.id}">
+    <span>${esc(m.title)}</span>
+    <button class="meeting-delete" onclick="deleteMeeting(${m.id})">×</button>
+  </div>`;
+}
+
+async function loadAll(){
+  const [tasks, meetings, note] = await Promise.all([
+    api('GET',`/api/tasks?date=${CURRENT_DATE}`),
+    api('GET',`/api/meetings?date=${CURRENT_DATE}`),
+    api('GET',`/api/notes?date=${CURRENT_DATE}`)
+  ]);
+  document.getElementById('todoList').innerHTML = tasks.filter(t=>t.category==='todo').map(taskHTML).join('');
+  document.getElementById('powerList').innerHTML = tasks.filter(t=>t.category==='power_hour').map(taskHTML).join('');
+  document.getElementById('meetingList').innerHTML = meetings.map(meetingHTML).join('');
+  document.getElementById('notesArea').value = note.content||'';
+}
+
+async function addTask(e,cat){
+  if(e.key!=='Enter') return;
+  const inp=e.target, title=inp.value.trim();
+  if(!title) return;
+  const t=await api('POST','/api/tasks',{title,task_date:CURRENT_DATE,category:cat});
+  document.getElementById(cat==='todo'?'todoList':'powerList').insertAdjacentHTML('beforeend',taskHTML(t));
+  inp.value='';
+}
+async function toggleTask(id,val){
+  const t=await api('PUT',`/api/tasks/${id}`,{completed:val});
+  document.getElementById(`task-${id}`).outerHTML=taskHTML(t);
+}
+async function deleteTask(id){
+  await api('DELETE',`/api/tasks/${id}`);
+  document.getElementById(`task-${id}`).remove();
+}
+async function addMeeting(e){
+  if(e.key!=='Enter') return;
+  const inp=e.target, title=inp.value.trim();
+  if(!title) return;
+  const m=await api('POST','/api/meetings',{title,meeting_date:CURRENT_DATE});
+  document.getElementById('meetingList').insertAdjacentHTML('beforeend',meetingHTML(m));
+  inp.value='';
+}
+async function deleteMeeting(id){
+  await api('DELETE',`/api/meetings/${id}`);
+  document.getElementById(`meeting-${id}`).remove();
+}
+function scheduleNoteSave(){
+  clearTimeout(notesTimer);
+  notesTimer=setTimeout(async()=>{
+    await api('POST','/api/notes',{content:document.getElementById('notesArea').value,note_date:CURRENT_DATE});
+  },800);
+}
+
+document.getElementById('dateDisplay').textContent=formatDate(CURRENT_DATE);
+document.getElementById('dowDisplay').textContent=getDow(CURRENT_DATE);
+buildWeekDays();
+loadAll();
+</script>
+{% endblock %}

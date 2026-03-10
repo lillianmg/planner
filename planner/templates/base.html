@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a1a;
+    --ink-light: #888;
+    --ink-faint: #d0d0d0;
+    --paper: #faf9f7;
+    --paper-warm: #f2efe9;
+    --accent: #c9a96e;
+    --accent-dark: #a07840;
+    --power: #e8ddd5;
+    --red: #c94040;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 40px;
+    border-bottom: 1px solid var(--ink-faint);
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .nav-links { display: flex; gap: 8px; }
+
+  .nav-link {
+    padding: 8px 18px;
+    border-radius: 100px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-light);
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .nav-link:hover { color: var(--ink); background: var(--paper-warm); }
+  .nav-link.active { color: var(--ink); background: var(--ink); color: var(--paper); }
+
+  .date-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--ink-light);
+  }
+  .date-nav button {
+    background: none;
+    border: 1px solid var(--ink-faint);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    transition: all 0.2s;
+  }
+  .date-nav button:hover { background: var(--paper-warm); border-color: var(--ink-light); }
+  .date-nav input[type=date] {
+    border: 1px solid var(--ink-faint);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  main { padding: 40px; max-width: 1200px; margin: 0 auto; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-primary:hover { background: #333; }
+  .btn-ghost { background: none; border: 1px solid var(--ink-faint); color: var(--ink-light); }
+  .btn-ghost:hover { border-color: var(--ink-light); color: var(--ink); }
+
+  input[type=text], textarea {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--ink);
+    width: 100%;
+  }
+  textarea { resize: none; }
+
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--paper-warm);
+    color: var(--ink-light);
+  }
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-brand" href="/">Planner</a>
+  <div class="nav-links">
+    <a class="nav-link {% if request.endpoint == 'daily' %}active{% endif %}" href="/daily?date={{ today }}">Daily</a>
+    <a class="nav-link {% if request.endpoint == 'matrix' %}active{% endif %}" href="/matrix?date={{ today }}">Matrix</a>
+  </div>
+  <div class="date-nav">
+    <button onclick="changeDate(-1)">←</button>
+    <input type="date" id="datePicker" value="{{ today }}" onchange="goDate(this.value)">
+    <button onclick="changeDate(1)">→</button>
+    <button onclick="goDate('{{ today_real }}')">Today</button>
+  </div>
+</nav>
+<main>
+{% block content %}{% endblock %}
+</main>
+<script>
+const CURRENT_DATE = '{{ today }}';
+const TODAY = '{{ today_real }}';
+
+function goDate(d) {
+  const url = new URL(window.location);
+  url.searchParams.set('date', d);
+  window.location = url.toString();
+}
+
+function changeDate(delta) {
+  const d = new Date(CURRENT_DATE + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  goDate(d.toISOString().slice(0,10));
+}
+
+async function api(method, path, body) {
+  const r = await fetch(path, {
+    method,
+    headers: {'Content-Type': 'application/json'},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return r.json();
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
