@@ -43,7 +43,7 @@ python planner_final.py
 - All entries older than 24 hours are automatically deleted
 - Not intended for production deployment
 
-# More
+## More
 It's a two-page daily productivity system.
 - Page 1 | Daily Planner has a day-of-week selector at the top to navigate your week. Below that, the left column splits your tasks into a regular To Do list and a Power Hour block, which is a dedicated section for your most challenging, focused work. The right column has Meetings and a Notes / Don't Forget area.
 - Page 2 | Priority Matrix is a 2x2 grid that helps you decide what to work on first. Tasks are sorted by two axes:
@@ -58,7 +58,7 @@ I made sure to add a Print button at the top if you prefer to see it on paper to
 ## Tech Stack
 
 **Frontend**
-- HTML|CSS|JavaScript
+- HTML | CSS | JavaScript
 
 **Backend**
 - Python & Flask to handle all API requests (saving, loading, deleting tasks)
