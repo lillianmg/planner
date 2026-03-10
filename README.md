@@ -48,8 +48,8 @@ It's a two-page daily productivity system.
 - Page 1 | Daily Planner has a day-of-week selector at the top to navigate your week. Below that, the left column splits your tasks into a regular To Do list and a Power Hour block, which is a dedicated section for your most challenging, focused work. The right column has Meetings and a Notes / Don't Forget area.
 - Page 2 | Priority Matrix is a 2x2 grid that helps you decide what to work on first. Tasks are sorted by two axes:
 
-Horizontal: Due Today ↔ Due Later
-Vertical: Quick Wins ↔ Big Tasks
+  - Horizontal: Due Today ↔ Due Later
+  - Vertical: Quick Wins ↔ Big Tasks
 
 The idea is that the Matrix helps you plan and prioritize, while the Daily page helps you execute. Tasks added in the Matrix sync to the Daily view, and everything clears automatically after 24 hours so you start fresh each day.
 
@@ -65,4 +65,4 @@ I made sure to add a Print button at the top if you prefer to see it on paper to
 - SQLite for the database that stores tasks, meetings, and notes locally
 
 **How they connect**
-When you add a task, JavaScript sends a request to Flask (`POST /api/tasks`). Flask writes it to SQLite and returns the saved task. JavaScript then adds it to the page, no page refresh needed.
+- When you add a task, JavaScript sends a request to Flask (`POST /api/tasks`). Flask writes it to SQLite and returns the saved task. JavaScript then adds it to the page, no page refresh needed.
