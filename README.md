@@ -58,11 +58,11 @@ I made sure to add a Print button at the top if you prefer to see it on paper to
 ## Tech Stack
 
 **Frontend**
-HTML|CSS|JavaScript
+- HTML|CSS|JavaScript
 
 **Backend**
 - Python & Flask to handle all API requests (saving, loading, deleting tasks)
 - SQLite for the database that stores tasks, meetings, and notes locally
 
 **How they connect**
-When you add a task, JavaScript sends a request to Flask (`POST /api/tasks`). Flask writes it to SQLite and returns the saved task. JavaScript then adds it to the page — no page refresh needed.
+When you add a task, JavaScript sends a request to Flask (`POST /api/tasks`). Flask writes it to SQLite and returns the saved task. JavaScript then adds it to the page, no page refresh needed.
