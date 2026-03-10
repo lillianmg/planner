@@ -44,10 +44,9 @@ python planner_final.py
 - Not intended for production deployment
 
 ## More
-It's a two-page daily productivity system.
-- Page 1 | Daily Planner has a day-of-week selector at the top to navigate your week. Below that, the left column splits your tasks into a regular To Do list and a Power Hour block, which is a dedicated section for your most challenging, focused work. The right column has Meetings and a Notes / Don't Forget area.
-- Page 2 | Priority Matrix is a 2x2 grid that helps you decide what to work on first. Tasks are sorted by two axes:
-
+It's a two-page daily productivity system.<br /><br />
+&nbsp;**Page 1** | Daily Planner has a day-of-week selector at the top to navigate your week. Below that, the left column splits your tasks into a regular To Do list and a Power Hour block, which is a dedicated section for your most challenging, focused work. The right column has Meetings and a Notes / Don't Forget area.<br /><br />
+&nbsp;**Page 2** | Priority Matrix is a 2x2 grid that helps you decide what to work on first. Tasks are sorted by two axes:
   - Horizontal: Due Today ↔ Due Later
   - Vertical: Quick Wins ↔ Big Tasks
 
@@ -61,8 +60,8 @@ I made sure to add a Print button at the top if you prefer to see it on paper to
 - HTML | CSS | JavaScript
 
 **Backend**
-- Python & Flask to handle all API requests (saving, loading, deleting tasks)
-- SQLite for the database that stores tasks, meetings, and notes locally
+- **Python** & **Flask** to handle all API requests (saving, loading, deleting tasks)
+- **SQLite** for the database that stores tasks, meetings, and notes locally
 
 **How they connect**
 - When you add a task, JavaScript sends a request to Flask (`POST /api/tasks`). Flask writes it to SQLite and returns the saved task. JavaScript then adds it to the page, no page refresh needed.
