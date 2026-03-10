@@ -9,7 +9,7 @@ A minimalist daily planner web app built with Flask and SQLite.
 - **Auto-clears**: all data is wiped after 24 hours
 - **Print**: clean print view on both pages
 
-## Priority Matrix Quadrants
+## Explaining the Matrix Quadrants
 - **Start Here** = due today + quick win
 - **On Hold** = due later + quick win (don't get distracted)
 - **Power Hour** = due today + big task
@@ -55,3 +55,14 @@ The idea is that the Matrix helps you plan and prioritize, while the Daily page 
 
 I made sure to add a Print button at the top if you prefer to see it on paper to cross over or checkmark the tasks.
 
+## Tech Stack
+
+**Frontend**
+HTML|CSS|JavaScript
+
+**Backend**
+- Python & Flask to handle all API requests (saving, loading, deleting tasks)
+- SQLite for the database that stores tasks, meetings, and notes locally
+
+**How they connect**
+When you add a task, JavaScript sends a request to Flask (`POST /api/tasks`). Flask writes it to SQLite and returns the saved task. JavaScript then adds it to the page — no page refresh needed.
