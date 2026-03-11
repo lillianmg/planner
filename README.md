@@ -1,6 +1,7 @@
 # Planner
 
-A minimalist daily planner web app built with Flask and SQLite.
+A minimalist daily planner web app built with Flask and SQLite.<br />
+https://planner.lilliangil.com/
 
 ## Features
 - **Daily View**: To Do list, Power Hour block, Meetings, and Notes
